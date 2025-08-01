@@ -77,7 +77,14 @@ export const UserProvider = ({ children }) => {
       selectedLayout: null,
       furnitureRecommendations: [],
       decorRecommendations: [],
-      tasks: []
+      tasks: [],
+      roomAnalysis: null,
+      aiGenerationHistory: [],
+      preferences: {
+        style: 'modern',
+        budget: 'moderate',
+        priorities: []
+      }
     }
     setProjects(prev => [...prev, newProject])
     return newProject
