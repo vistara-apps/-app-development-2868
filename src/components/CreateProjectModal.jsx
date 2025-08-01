@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
-import { X, Upload } from 'lucide-react'
+import { X, Upload, AlertCircle } from 'lucide-react'
 import { useUser } from '../contexts/UserContext'
 import { useNavigate } from 'react-router-dom'
+import { validateImageFile, createImagePreview, cleanupImagePreview } from '../utils/imageUtils.js'
 
 const CreateProjectModal = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -12,12 +13,18 @@ const CreateProjectModal = ({ isOpen, onClose }) => {
     height: '',
     description: ''
   })
-  const [selectedFile, setSelectedFile] = useState(null)
+  const [selectedFiles, setSelectedFiles] = useState([])
+  const [fileErrors, setFileErrors] = useState([])
+  const [previewUrls, setPreviewUrls] = useState([])
   const { createProject } = useUser()
   const navigate = useNavigate()
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    
+    // Clean up preview URLs
+    previewUrls.forEach(url => cleanupImagePreview(url))
+    
     const project = createProject({
       ...formData,
       roomDimensions: {
@@ -25,7 +32,8 @@ const CreateProjectModal = ({ isOpen, onClose }) => {
         width: parseFloat(formData.width),
         height: parseFloat(formData.height)
       },
-      roomPhotos: selectedFile ? [selectedFile.name] : []
+      roomPhotos: selectedFiles.map(file => file.name),
+      roomPhotoFiles: selectedFiles // Store actual file objects for AI analysis
     })
     onClose()
     navigate(`/projects/${project.id}`)
@@ -39,8 +47,38 @@ const CreateProjectModal = ({ isOpen, onClose }) => {
   }
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0]
-    setSelectedFile(file)
+    const files = Array.from(e.target.files)
+    const validFiles = []
+    const errors = []
+    const newPreviewUrls = []
+
+    files.forEach((file, index) => {
+      const validation = validateImageFile(file, 10) // 10MB limit
+      if (validation.isValid) {
+        validFiles.push(file)
+        newPreviewUrls.push(createImagePreview(file))
+      } else {
+        errors.push(`${file.name}: ${validation.errors.join(', ')}`)
+      }
+    })
+
+    // Clean up old preview URLs
+    previewUrls.forEach(url => cleanupImagePreview(url))
+
+    setSelectedFiles(validFiles)
+    setFileErrors(errors)
+    setPreviewUrls(newPreviewUrls)
+  }
+
+  const removeFile = (index) => {
+    const newFiles = selectedFiles.filter((_, i) => i !== index)
+    const newPreviews = previewUrls.filter((_, i) => i !== index)
+    
+    // Clean up the removed preview URL
+    cleanupImagePreview(previewUrls[index])
+    
+    setSelectedFiles(newFiles)
+    setPreviewUrls(newPreviews)
   }
 
   if (!isOpen) return null
@@ -146,17 +184,21 @@ const CreateProjectModal = ({ isOpen, onClose }) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Upload Room Photo (Optional)
+              Upload Room Photos (Optional)
             </label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
               <Upload className="mx-auto w-12 h-12 text-gray-400 mb-4" />
               <div className="text-sm text-gray-600 mb-2">
-                {selectedFile ? selectedFile.name : 'Click to upload or drag and drop'}
+                {selectedFiles.length > 0 
+                  ? `${selectedFiles.length} file(s) selected`
+                  : 'Click to upload or drag and drop multiple photos'
+                }
               </div>
               <input
                 type="file"
                 onChange={handleFileChange}
                 accept="image/*"
+                multiple
                 className="hidden"
                 id="file-upload"
               />
@@ -166,7 +208,55 @@ const CreateProjectModal = ({ isOpen, onClose }) => {
               >
                 Browse Files
               </label>
+              <p className="text-xs text-gray-500 mt-2">
+                JPEG, PNG, WebP up to 10MB each. Multiple photos help AI generate better layouts.
+              </p>
             </div>
+
+            {/* File Errors */}
+            {fileErrors.length > 0 && (
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-start space-x-2">
+                  <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                  <div>
+                    <h4 className="text-sm font-medium text-red-800">File Upload Errors</h4>
+                    <ul className="text-sm text-red-700 mt-1 space-y-1">
+                      {fileErrors.map((error, index) => (
+                        <li key={index}>• {error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* File Previews */}
+            {selectedFiles.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Selected Photos</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {selectedFiles.map((file, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={previewUrls[index]}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-20 object-cover rounded-lg border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeFile(index)}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        ×
+                      </button>
+                      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-lg truncate">
+                        {file.name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div>
