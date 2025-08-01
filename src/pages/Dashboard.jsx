@@ -1,7 +1,9 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Home, Calendar, Users } from 'lucide-react'
+import { Plus, Home, Calendar, Users, TrendingUp, Sparkles } from 'lucide-react'
 import { useUser } from '../contexts/UserContext'
+import Button from '../components/ui/Button'
+import Card from '../components/ui/Card'
 
 const Dashboard = () => {
   const { user, projects, subscription } = useUser()
@@ -20,73 +22,92 @@ const Dashboard = () => {
   const recentProjects = projects.slice(-3)
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
       {/* Welcome Section */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Welcome back, {user.name}!
-        </h1>
-        <p className="text-gray-600">
-          Let's continue transforming your spaces into functional, beautiful homes.
-        </p>
+      <div className="mb-10 animate-slide-up">
+        <div className="flex items-center space-x-4 mb-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl flex items-center justify-center">
+            <Sparkles className="w-6 h-6 text-primary-600" />
+          </div>
+          <div>
+            <h1 className="heading-md text-gray-900">
+              Welcome back, {user.name}!
+            </h1>
+            <p className="text-gray-600 text-lg">
+              Let's continue transforming your spaces into functional, beautiful homes.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Subscription Status */}
       {subscription && (
-        <div className="card mb-8 bg-primary-50 border-primary-200">
+        <Card className="mb-10 bg-gradient-to-r from-primary-50 to-primary-100 border-primary-200 animate-slide-up" style={{animationDelay: '0.1s'}}>
           <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-primary-900 mb-1">
-                {subscription.plan} Plan Active
-              </h3>
-              <p className="text-primary-700">
-                Your subscription is active and ready to use.
-              </p>
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-primary-200 rounded-xl flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-primary-700" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-primary-900 mb-1">
+                  {subscription.plan} Plan Active
+                </h3>
+                <p className="text-primary-700">
+                  Your subscription is active and ready to use all features.
+                </p>
+              </div>
             </div>
-            <div className="text-primary-600">
-              <Calendar className="w-8 h-8" />
+            <div className="hidden sm:flex items-center space-x-2 text-primary-600">
+              <TrendingUp className="w-5 h-5" />
+              <span className="text-sm font-medium">Premium</span>
             </div>
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Link to="/projects" className="card hover:shadow-lg transition-shadow cursor-pointer">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <Card 
+          interactive
+          className="group hover-lift animate-slide-up"
+          style={{animationDelay: '0.2s'}}
+        >
+          <Link to="/projects" className="block">
+            <div className="flex items-center space-x-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl flex items-center justify-center group-hover:shadow-medium transition-all duration-300">
+                <Plus className="w-7 h-7 text-primary-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-primary-700 transition-colors">Create New Project</h3>
+                <p className="text-gray-600">Start designing a new room</p>
+              </div>
+            </div>
+          </Link>
+        </Card>
+
+        <Card className="animate-slide-up" style={{animationDelay: '0.3s'}}>
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
-              <Plus className="w-6 h-6 text-primary-600" />
+            <div className="w-14 h-14 bg-gradient-to-br from-success-100 to-success-200 rounded-xl flex items-center justify-center">
+              <Home className="w-7 h-7 text-success-600" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Create New Project</h3>
-              <p className="text-gray-600">Start designing a new room</p>
+              <h3 className="text-2xl font-bold text-gray-900">{projects.length}</h3>
+              <p className="text-gray-600 font-medium">Total Projects</p>
             </div>
           </div>
-        </Link>
+        </Card>
 
-        <div className="card">
+        <Card className="animate-slide-up" style={{animationDelay: '0.4s'}}>
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <Home className="w-6 h-6 text-green-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">{projects.length}</h3>
-              <p className="text-gray-600">Total Projects</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Users className="w-6 h-6 text-blue-600" />
+            <div className="w-14 h-14 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
+              <Users className="w-7 h-7 text-blue-600" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">Design Style</h3>
-              <p className="text-gray-600">{user.designPreferences || 'Not set'}</p>
+              <p className="text-gray-600 font-medium">{user.designPreferences || 'Not set'}</p>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Recent Projects */}
